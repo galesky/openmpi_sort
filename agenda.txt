@@ -1,0 +1,23 @@
+
+    1. Executar (ou adaptar) o código do Bitonic Sort para ser executado no Sdumont usando as bibliotecas openmpi já presentes no supercomputador
+        a) entrada números inteiros (1 bilhão de números ou mais)
+        b) avaliar tempo de execução
+        c) verificar outras métricas (memória?)
+    2. Executar o Bitonic Sort com a ULFM sem falhas com a biblioteca instalada na área do ppccomp
+        a) avaliar com a mesma entrada
+        b) avaliar tempo de execução
+        c) verificar outras métricas (memória?)
+        d) comparar com a execução 1
+    3. Avaliar em cenário de falhas de processos usando a ULFM
+    4. Otimizar o próprio algoritmo na forma como os dados são salvos/carregados em cada processo
+    5. Otimizar o algoritmo usando estratégias de memória compartilhada
+        a) openacc (GPU)
+        b) openmp (CPU)
+        c) verficar tempo de execução
+        d) comparar com os cenários 1 e 2.
+    6. Fazer uma breve revisão da literatura para escrever o artigo. Ou seja, quais são as estratégias atuais para a execução do Bitonic Sort.
+
+Obs: 
+- Hyperquicksort (também um algoritmo de ordenação no Hipercubo)
+
+          
