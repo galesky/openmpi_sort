@@ -21,6 +21,9 @@ int main(int argc, char** argv)
         printf("Missing arguments\n %s # of elements\n", argv[0]);
         return 0;
     }
+
+    printf("Starting MPI\n");
+
         
     // Inicialization
 	MPI_Init(&argc, &argv);
@@ -41,25 +44,28 @@ int main(int argc, char** argv)
 
     // Cube dimension
     dim = (int )(log(process) / log(2));
-
+    printf("Allocating list memory\n");
     // Allocate memory
     localList = (int *)malloc(size * sizeof(int));          // Local list for each process 
     verifyProcess = (int *)malloc(process * sizeof(int));   // Vector who say which process are stable
+    
     
     // Set all process as stable
     for (int i = 0; i < process; i++)
         verifyProcess[i] = ALIVE;
 
+    printf("Start Readings the File\n");
     // Only MASTER read the file
 	if(rank == MASTER)
     {
         // Allocate memory for vector
+        printf("MASTER: File mem vector\n");
 		vector = (int *)malloc(MAX_SIZE * sizeof(int));
-
+        printf("MASTER: File read started\n");
         // Read the numbers of a file(.dat)
         readVector(vector, MAX_SIZE, rank);  
     }   
-
+    printf("File read succesfully");
     // Blocks until MASTER process have finished read the data
     MPI_Barrier(commBackup); 
 
