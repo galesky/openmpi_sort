@@ -123,83 +123,6 @@ void saveArchive(int *localList, int size, int rank)
 void MPI_myBarrier(int rank, int process, MPI_Comm *comm)
 {
 	int error = MPI_Barrier(*comm);
-
-	if((error == MPI_ERR_PROC_FAILED) || (error == MPI_ERR_REVOKED))
-        makeNewComm(rank, process, &(*comm));
-}
-
-void makeNewComm(int rank, int process, MPI_Comm *comm)
-{
-    int varFalse = 0;
-
-    MPI_Comm temp;
-
-    MPIX_Comm_agree(*comm, &varFalse);
-
-    MPIX_Comm_revoke(*comm);
-
-    repairComm(process, &comm);
-
-    MPIX_Comm_shrink(*comm, &temp);
-    MPI_Comm_free(&(*comm));
-    *comm = temp;
-}
-
-void repairComm(int process, MPI_Comm **comm)
-{
-	int processOld, rankOld, *tempRanks, *failedRanks, sizeFailed, j, cont;
-
-    MPI_Group failedGroup;
-    MPI_Group groupOld;
-
-    MPI_Comm_size(**comm, &processOld);   	
-    MPI_Comm_group(**comm, &groupOld);  	
-    MPI_Comm_rank(**comm, &rankOld);    	
-    MPIX_Comm_failure_ack(**comm);       	
-    MPIX_Comm_failure_get_acked(**comm, &failedGroup);
-    MPI_Group_size(failedGroup, &sizeFailed);
-
-    // Discover which process have failed
-    tempRanks = (int*) malloc(sizeof(int) * processOld);
-    failedRanks = (int*) malloc(sizeof(int) * processOld);
-
-    for(int i = 0; i < processOld; i++)
-        tempRanks[i] = i;
-
-    if((tempRanks == NULL) || (failedRanks == NULL))
-        exit(0);
-
-    MPI_Group_translate_ranks(failedGroup, sizeFailed, tempRanks, groupOld, failedRanks);
-
-    if(numFailures == 0) // Frist Time
-        for(int i = 0; i < sizeFailed; i++)
-            verifyProcess[ failedRanks[i] ] = DEAD;
-    else
-    {
-    	qsort(failedRanks, sizeFailed, sizeof(int), compareAsc);
-
-        for(int i = sizeFailed - 1; i >= 0; i--)
-        {
-            cont = -1;
-            j = 0;
-
-            while((cont < failedRanks[i]) && (cont < process))
-            {
-                if (verifyProcess[j] == ALIVE)
-                    cont++;
-
-                j++;
-            }
-            verifyProcess[j - 1] = DEAD;
-        }
-    }
-
-    numFailures += sizeFailed;
-
-    free(tempRanks);
-    free(failedRanks);
-    MPI_Group_free(&failedGroup);
-    MPI_Group_free(&groupOld);
 }
 
 void makeMap(int *map, int *deadProcess, int rank, int process, int dim)
@@ -276,55 +199,6 @@ int testPartner(int rank, int myPartner, int round)
     }
 
     return pass; 
-}
-
-void testIfNeedTakePlace(int *map, int partner, int rank, int process, int processSave, int size, int *deadProcess, MPI_Comm *commSort, int i, int j)
-{
-    int *saveList, newPartner;
-
-    saveList = (int *)malloc(size * sizeof(int));
-    
-    if (testDead(deadProcess, processSave))
-    {
-        for (int k = 0; k < numFailures; k++)
-        {
-            int myNewTempRank = deadProcess[k];
-              
-            if (myNewTempRank != partner && myNewTempRank != -1)
-            {
-                readFromFile(myNewTempRank, saveList);
-
-                newPartner = myNewTempRank ^ (1 << j);
-
-                if(verifyProcess[newPartner])
-                    newPartner = map[newPartner];
-
-                if (rank != newPartner)
-                {
-                    if (((myNewTempRank >> (i + 1)) % 2 == 0 && (myNewTempRank >> j) % 2 == 0) || ((myNewTempRank >> (i + 1)) % 2 != 0 && (myNewTempRank >> j) % 2 != 0))
-                        saveList = compareFunc(saveList, size, newPartner, process, rank, commSort, ASC);
-                    else
-                        saveList = compareFunc(saveList, size, newPartner, process, rank, commSort, DESC);
-
-                    printf("Saving Archive.... Rank(%d)\n", myNewTempRank);
-                    saveArchive(saveList, size, myNewTempRank);
-                }
-                else
-                {
-                    newPartner = myNewTempRank ^ (1 << j);
-
-                    saveList = pickFile(myNewTempRank, newPartner, saveList, size, i, j);   
-                    removeDead(deadProcess, newPartner, processSave);
-                    removeDead(deadProcess, myNewTempRank, processSave);
-
-                    printf("Saving Archive.... Rank(%d)\n", myNewTempRank);
-                    saveArchive(saveList, size, myNewTempRank);
-                }
-            }
-        }
-    }
-
-    free(saveList); 
 }
 
 int *pickFile(int rank, int partner, int *localList, int size, int i, int j)
@@ -537,8 +411,7 @@ void applyFailures(int whichFail, int *vectorFail, int *roundFail, int process, 
 
 void killRank(int rank, int processFail)
 {
-    if(rank == processFail)
-        kill(getpid(), SIGKILL);
+  return;
 }
 
 void removeFile(int process)

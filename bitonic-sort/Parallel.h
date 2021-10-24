@@ -36,15 +36,12 @@ int compareAsc(const void * a, const void * b);
 void saveArchive(int *localList, int size, int rank);
 
 void MPI_myBarrier(int rank, int process, MPI_Comm *comm);
-void makeNewComm(int rank, int process, MPI_Comm *comm);
-void repairComm(int process, MPI_Comm **comm);
 
 void makeMap(int *map, int *deadProcess, int rank, int process, int dim);
 int findPartnerMap(int rank, int round);
 void addDeadProcess(int *vector, int process, int myRank);
 
 int testPartner(int rank, int myPartner, int round);
-void testIfNeedTakePlace(int *map, int partner, int rank, int process, int processSave, int size, int *deadProcess, MPI_Comm *commSort, int i, int j);
 int *pickFile(int rank, int partner, int *localList, int size, int i, int j);
 void copyList(int *vector, int *vector2, int size);
 int testDead(int *deadProcess, int process);
