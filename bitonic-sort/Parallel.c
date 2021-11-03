@@ -3,19 +3,17 @@
 int readVector(int *vector, int MAX_SIZE, int rank)  
 {
 	// Open the file (.dat - Binary)
-	FILE *entrada = fopen("Entrada.dat", "rb");
+	FILE *entrada = fopen("Entrada.txt", "rb");
 
 	int i = 0;
 
 	while(!feof(entrada))
 	{
-		if (fread(&vector[i], sizeof(int), 1, entrada))
-		{
-			if (feof(entrada))
-				break;
-		}
-		i++;
+        printf ("%d ", i);
+        fscanf (entrada, "%d", &vector[i]);
+        i++;
 	}
+    printf("Finished reading(%d)\n", i);
 
 	fclose(entrada);
 }

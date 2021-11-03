@@ -53,8 +53,6 @@ int main(int argc, char** argv)
     // Set all process as stable
     for (int i = 0; i < process; i++)
         verifyProcess[i] = ALIVE;
-
-    printf("Start Readings the File\n");
     // Only MASTER read the file
 	if(rank == MASTER)
     {
@@ -63,12 +61,16 @@ int main(int argc, char** argv)
 		vector = (int *)malloc(MAX_SIZE * sizeof(int));
         printf("MASTER: File read started\n");
         // Read the numbers of a file(.dat)
-        readVector(vector, MAX_SIZE, rank);  
+        readVector(vector, MAX_SIZE, rank);
+        printf("MASTER: File read completed\n");
+        printf("MASTER: First vector item (%d)",vector[0]);
+        printf("MASTER: Middle vector item (%d)",vector[50000]);
+        printf("MASTER: First vector item (%d)",vector[99999]);
+
     }   
-    printf("File read succesfully");
     // Blocks until MASTER process have finished read the data
     MPI_Barrier(commBackup); 
-
+    printf("Post Barrier(%d)\n", rank);
     // Divide data between all processes
  	MPI_Scatter(vector, size, MPI_INT, localList, size, MPI_INT, 0, commSort);  
 

@@ -1,6 +1,8 @@
 # openmpi_sort
 Open MPI and Fault Tolerance article
 
+# running
+$ mpicc main.c -lm && mpirun -np 4 ./a.out 100000 100000
 # Useful links
 
 * Overview of Bitonic sorting in OpenMP, MPI and CUDA
