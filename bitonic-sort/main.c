@@ -5,6 +5,7 @@
 #include <mpi.h>
 #include "Parallel.c"
 #include "Parallel.h"
+#include <stdbool.h>
 
 int main(int argc, char** argv)
 {
@@ -79,23 +80,54 @@ int main(int argc, char** argv)
 
     // Local sort
  	qsort(localList, size, sizeof(int), compareAsc);
-
-    printf("Saving Archive.... Rank(%d)\n", rank);
-    // Save local data in file
-    saveArchive(localList, size, rank);
-
-    // Blocks until all processes have finished the local sort
-    MPI_Barrier(commBackup);
+    
+    MPI_Barrier(commBackup); 
 
     for (int i = 0; i < dim; i++) 
     {
         printf("Rodada %d rank (%d)\n", i, rank);
-
         for (int j = i; j >= 0; j--) 
         {   
             printf("Inicio j (%d)\n", rank);
-            // Barreira desnecessaria
-            MPI_Barrier(commBackup);
+            // Find the process partner
+            partner = rank ^ (1 << j); 
+
+            if (rank != partner)
+            { 
+                if (testPartner(rank, partner, dim))
+                {
+                    // Window_id = Most Significant [dim - (i + 1)] bits of process
+                    // Window_id is even AND jth bit of process is 0 then CompareLow OR Window_id is odd AND jth bit of process is 1 then CompareHigh
+                    if (((rank >> (i + 1)) % 2 == 0 && (rank >> j) % 2 == 0) || ((rank >> (i + 1)) % 2 != 0 && (rank >> j) % 2 != 0))
+                        localList = compareFunc(localList, size, partner, process, rank, commSort, ASC);
+                    else
+                        localList = compareFunc(localList, size, partner, process, rank, commSort, DESC);
+                    // Test if need to take the place of someone
+                }
+                else
+                {
+                    // Window_id = Most Significant [dim - (i + 1)] bits of process
+                    // Window_id is even AND jth bit of process is 0 then CompareLow OR Window_id is odd AND jth bit of process is 1 then CompareHigh
+                    if (((rank >> (i + 1)) % 2 == 0 && (rank >> j) % 2 == 0) || ((rank >> (i + 1)) % 2 != 0 && (rank >> j) % 2 != 0))
+                    {
+                        localList = compareFunc(localList, size, partner, process, rank, commSort, ASC);
+                        // Test if need to take the place of someone
+                    }
+                    else
+                    {
+                        localList = compareFunc(localList, size, partner, process, rank, commSort, DESC);
+                    }
+                }
+            }
+            else if(rank == partner)
+            {
+                // Find the process partner
+                partner = rank ^ (1 << j);
+
+                // If need take place of someone, but dont need exchange list with other process (rank == partner)
+                localList = pickFile(rank, partner, localList, size, i, j);
+                // Test if need to take the place of someone
+            }
 
             printf("Saving Archive.... Rank(%d)\n", rank);
             // Save local data in file
@@ -106,6 +138,13 @@ int main(int argc, char** argv)
         }
     }
 
+    printf("Saving Archive.... Rank(%d)\n", rank);
+    // Save local data in file
+    saveArchive(localList, size, rank);
+
+    // Blocks until all processes have finished the local sort
+    MPI_Barrier(commBackup);
+
     // End sort
     endTime = MPI_Wtime();
 
@@ -113,9 +152,22 @@ int main(int argc, char** argv)
     MPI_Barrier(commBackup);
 
     // Show the time
-    if (rank == MASTER)
-        printf("Sort Time: %f\n", endTime - startTime);
-
+    if (rank == MASTER){
+        bool isSorted = true;
+        
+        for (int i = 1; i < MAX_SIZE; i++){
+            printf("Item : %d\n", localList[i]);
+            if (localList[i] < localList[i-1]) {
+                isSorted = false;
+            }
+        }
+        if (isSorted == false) {
+            printf("Sort failed : %f\n", endTime - startTime);
+        } else {
+            printf("Sort sucessfull  ! \n");
+            printf("Sort Time: %f\n", endTime - startTime);
+        }
+    }
     if (rank == MASTER)
         free(vector);
 
