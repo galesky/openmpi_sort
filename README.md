@@ -2,7 +2,16 @@
 Open MPI and Fault Tolerance article
 
 # running
+
+### Locally
+```
 $ mpicc main.c -lm && mpirun -np 4 ./a.out 100000 100000
+```
+### sdumont
+```
+$ mpicc main.c -std=c99 -lm && mpirun -np 24 ./a.out 100000 100000
+```
+
 # Useful links
 
 * Overview of Bitonic sorting in OpenMP, MPI and CUDA
