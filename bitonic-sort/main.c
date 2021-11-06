@@ -155,8 +155,7 @@ int main(int argc, char** argv)
     if (rank == MASTER){
         bool isSorted = true;
         
-        for (int i = 1; i < MAX_SIZE; i++){
-            printf("Item : %d\n", localList[i]);
+        for (int i = 1; i < sizeof(localList)/sizeof(int); i++){
             if (localList[i] < localList[i-1]) {
                 isSorted = false;
             }
